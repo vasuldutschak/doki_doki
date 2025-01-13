@@ -1,7 +1,6 @@
 const {validateBody,authenticateWithUserRole, isValidId} = require("../../middlewares");
 const {schemas} = require("../../models/user");
-const {updateVerify}=require('./../../controllers/userController')
-const {getAll, removeById, update, createUserAccount} = require("../../controllers/userController");
+const {getAll, removeById, update, createUserAccount,getUserById,updateVerify} = require("../../controllers/userController");
 
 const router=require('express').Router();
 
@@ -10,7 +9,9 @@ router.patch("/:id/verify",authenticateWithUserRole(["ADMIN"]),isValidId ,valida
 
 router.get("/",authenticateWithUserRole(["ADMIN"]),getAll)
 
-router.delete("/:id",authenticateWithUserRole(["ADMIN"]),isValidId,removeById)
+router.get("/:id",isValidId,authenticateWithUserRole(),getUserById)
+
+router.delete("/:id",isValidId,authenticateWithUserRole(["ADMIN"]),removeById)
 
 router.put("/:id",authenticateWithUserRole(["ADMIN","USER"]),isValidId,validateBody(schemas.updateSchema),update)
 
