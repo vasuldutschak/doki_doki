@@ -23,6 +23,11 @@ const userSchema = new Schema({
         unique: true,
         match: EMAIL_REGEX
     },
+    hourlyRate:{
+      type: Number,
+      required: true,
+      default: 5
+    },
     password: {
         type: String,
         required: true,
@@ -34,6 +39,10 @@ const userSchema = new Schema({
     },
     isVerified: {
         type: Boolean,
+    },
+    verificationCode:{
+        type: String,
+        default: ""
     },
     userRole: {
         type: String,
@@ -86,6 +95,10 @@ const loginSchema = Joi.object({
     password: Joi.string().min(PASSWORD_MIN_LENGTH).required(),
 })
 
+const resendCodeSchema=Joi.object({
+    email:Joi.string().pattern(EMAIL_REGEX).required(),
+})
+
 const verifySchema = Joi.object({
     isVerified: Joi.boolean().required(),
 })
@@ -123,11 +136,12 @@ const createSchema = Joi.object({
             'string.empty': 'Password is required.',
             'string.min': `Password must be at least ${PASSWORD_MIN_LENGTH} characters long.`,
         }),
+    hourlyRate:Joi.number().required(),
     isVerified: Joi.boolean().required(),
     userRole:Joi.string().valid(...USER_ROLES).required(),
 });
 const schemas = {
-    registerSchema, loginSchema, verifySchema, updateSchema, createSchema
+    registerSchema, loginSchema, verifySchema, updateSchema, createSchema,resendCodeSchema
 }
 const User = model('user', userSchema)
 
