@@ -70,10 +70,26 @@ const createUserAccount=async (req,res,next) => {
     })
 }
 
+const getUserById=async (req,res,next) => {
+    const {id} = req.params;
+
+    if (req.user.userRole !== 'ADMIN' && req.user._id.toString() !== id) {
+        throw HttpError(403, `Access denied. You do not have permission to access user with id ${id}`);
+    }
+
+    const user=await User.findById(id,"-password -isVerified -verificationCode -createdAt -updatedAt")
+
+    if(!user){
+        throw HttpError(403,`User with id ${id} not found`);
+    }
+    res.status(200).json(user)
+}
+
 module.exports={
     updateVerify:ctrlWrapper(updateVerify),
     getAll:ctrlWrapper(getAll),
     removeById:ctrlWrapper(removeById),
     update:ctrlWrapper(update),
     createUserAccount:ctrlWrapper(createUserAccount),
+    getUserById:ctrlWrapper(getUserById)
 }
