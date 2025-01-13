@@ -60,10 +60,45 @@ const createSchema=Joi.object({
     surchargePerHour: Joi.number().required(),
 })
 
+const findByDateSchema=Joi.object({
+    date: Joi.date()
+    .iso() // Перевіряє, що дата у форматі ISO (наприклад, 2025-10-16)
+    .required() // Поле обов'язкове
+    .messages({
+        'date.base': 'Дата повинна бути у форматі дати',
+        'date.format': 'Дата повинна бути у форматі YYYY-MM-DD',
+        'any.required': 'Поле дати є обов’язковим',
+    }),
+})
+const findFromAndToSchemas=Joi.object({
+    from:Joi.date()
+        .iso() // Перевіряє, що дата у форматі ISO (наприклад, 2025-10-16)
+        .required() // Поле обов'язкове
+        .messages({
+            'date.base': 'Дата повинна бути у форматі дати',
+            'date.format': 'Дата повинна бути у форматі YYYY-MM-DD',
+            'any.required': 'Поле дати є обов’язковим',
+        }),
+    to:Joi.date()
+        .iso() // Перевіряє, що дата у форматі ISO (наприклад, 2025-10-16)
+        .required() // Поле обов'язкове
+        .messages({
+            'date.base': 'Дата повинна бути у форматі дати',
+            'date.format': 'Дата повинна бути у форматі YYYY-MM-DD',
+            'any.required': 'Поле дати є обов’язковим',
+        }),
+})
+
+
+const getUpdateByIdSchemas=Joi.object({
+    scheduleId:Joi.string().pattern(OBJECT_ID_PATTERN).required(),
+    userId:Joi.string().pattern(OBJECT_ID_PATTERN).required()
+})
+
 scheduleSchema.post("save", handleMongooseError)
 
 const schemas={
-    updateSchema,createSchema
+    updateSchema,createSchema,findByDateSchema,findFromAndToSchemas,getUpdateByIdSchemas
 }
 
 const Schedule = model('schedule', scheduleSchema)
