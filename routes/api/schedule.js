@@ -1,4 +1,4 @@
-const {validateBody,authenticateWithUserRole, isValidId} = require("../../middlewares");
+const {validateBody,authenticateWithUserRole, isValidId, validateParams} = require("../../middlewares");
 const {schemas} = require("../../models/schedule");
 const {createSchedule,
     findScheduleById,
@@ -17,13 +17,13 @@ router.get("/",authenticateWithUserRole(),getAllSchedules)
 
 router.get("/:id",authenticateWithUserRole(),isValidId,findScheduleById)
 
-router.get("/find/:date",authenticateWithUserRole(),findScheduleByDate)
+router.get("/find/:date",authenticateWithUserRole(),validateParams(schemas.findByDateSchema),findScheduleByDate)
 
-router.get("/find/:from/:to",authenticateWithUserRole(),findBetweenDates)
+router.get("/find/:from/:to",authenticateWithUserRole(),validateParams(schemas.findFromAndToSchemas),findBetweenDates)
 
-router.get("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),getUserByScheduleIdAndUserId)
+router.get("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),validateParams(schemas.getUpdateByIdSchemas),getUserByScheduleIdAndUserId)
 
-router.put("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),updateUserByScheduleIdAndUserId)
+router.put("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),validateParams(schemas.getUpdateByIdSchemas),updateUserByScheduleIdAndUserId)
 
 router.put("/find/schedule/:scheduleId",authenticateWithUserRole(["ADMIN"]),updateScheduleById)
 
