@@ -4,7 +4,7 @@ const {SECRET_KEY}=process.env
 const {User}=require('../models/user')
 
 
-const authenticateWithUserRole = (role=["USER"])=>async (req, res, next) => {
+const authenticateWithUserRole = (roles=["USER","ADMIN"])=>async (req, res, next) => {
     const {authorization=""} = req.headers;
     const [bearer,token] = authorization.split(' ');
     if(bearer !== "Bearer"){
@@ -19,7 +19,7 @@ const authenticateWithUserRole = (role=["USER"])=>async (req, res, next) => {
             next( HttpError(401,`Authentication failed`));
         }
 
-        if (!role.includes(user.userRole)) {
+        if (!roles.includes(user.userRole)) {
             next(HttpError(403))
         }
             req.user=user;
