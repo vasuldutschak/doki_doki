@@ -6,9 +6,18 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 const PASSWORD_MIN_LENGTH = 6
 const PASSWORD_MAX_LENGTH = 10
 const USER_ROLES = ["ADMIN", "USER"]
-
+const GENDER = ["Male", "Female", "Other"]
 
 const userSchema = new Schema({
+    avatar: {
+        type: String,
+        required: true,
+    },
+    gender: {
+        type: String,
+        enum: GENDER,
+        required: true,
+    },
     name: {
         type: String,
         required: true,
@@ -23,10 +32,10 @@ const userSchema = new Schema({
         unique: true,
         match: EMAIL_REGEX
     },
-    hourlyRate:{
-      type: Number,
-      required: true,
-      default: 5
+    hourlyRate: {
+        type: Number,
+        required: true,
+        default: 5
     },
     password: {
         type: String,
@@ -40,7 +49,7 @@ const userSchema = new Schema({
     isVerified: {
         type: Boolean,
     },
-    verificationCode:{
+    verificationCode: {
         type: String,
         default: ""
     },
@@ -87,7 +96,8 @@ const registerSchema = Joi.object({
         .messages({
             'string.empty': 'Password is required.',
             'string.min': `Password must be at least ${PASSWORD_MIN_LENGTH} characters long.`,
-        })
+        }),
+    gender: Joi.string().valid(...GENDER).required()
 });
 
 const loginSchema = Joi.object({
@@ -95,8 +105,8 @@ const loginSchema = Joi.object({
     password: Joi.string().min(PASSWORD_MIN_LENGTH).required(),
 })
 
-const resendCodeSchema=Joi.object({
-    email:Joi.string().pattern(EMAIL_REGEX).required(),
+const resendCodeSchema = Joi.object({
+    email: Joi.string().pattern(EMAIL_REGEX).required(),
 })
 
 const verifySchema = Joi.object({
@@ -136,12 +146,14 @@ const createSchema = Joi.object({
             'string.empty': 'Password is required.',
             'string.min': `Password must be at least ${PASSWORD_MIN_LENGTH} characters long.`,
         }),
-    hourlyRate:Joi.number().required(),
+    gender: Joi.string().valid(...GENDER).required(),
+    avatar: Joi.string().required(),
+    hourlyRate: Joi.number().required(),
     isVerified: Joi.boolean().required(),
-    userRole:Joi.string().valid(...USER_ROLES).required(),
+    userRole: Joi.string().valid(...USER_ROLES).required(),
 });
 const schemas = {
-    registerSchema, loginSchema, verifySchema, updateSchema, createSchema,resendCodeSchema
+    registerSchema, loginSchema, verifySchema, updateSchema, createSchema, resendCodeSchema
 }
 const User = model('user', userSchema)
 
