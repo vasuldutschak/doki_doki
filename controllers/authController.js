@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const {SECRET_KEY}=process.env;
 const {nanoid}=require('nanoid')
 const {BASE_API_URL,PORT}=process.env;
-const DEFAULT_AVATAR="https://getavataaars.com/?accessoriesType=Wayfarers&avatarStyle=Transparent&clotheColor=Gray02&clotheType=BlazerShirt&eyeType=Side&eyebrowType=UpDown&facialHairColor=BlondeGolden&facialHairType=Blank&graphicType=Skull&hairColor=Blonde&hatColor=Gray02&mouthType=Tongue&skinColor=Brown&topType=LongHairStraight2"
+const {DEFAULT_AVATAR}=process.env
 
 const register=async (req,res,next)=>{
     const {email,password} = req.body
