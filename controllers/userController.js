@@ -1,5 +1,6 @@
 const {ctrlWrapper, HttpError, createHash} = require("../helpers");
 const {User}=require('./../models/user')
+const DEFAULT_AVATAR="https://getavataaars.com/?accessoriesType=Wayfarers&avatarStyle=Transparent&clotheColor=Gray02&clotheType=BlazerShirt&eyeType=Side&eyebrowType=UpDown&facialHairColor=BlondeGolden&facialHairType=Blank&graphicType=Skull&hairColor=Blonde&hatColor=Gray02&mouthType=Tongue&skinColor=Brown&topType=LongHairStraight2"
 
 const updateVerify = async (req,res,next) => {
     const {id} = req.params;
@@ -62,7 +63,7 @@ const createUserAccount=async (req,res,next) => {
     const hashPassword=await createHash(password)
 
 
-    const newUser=await User.create({...req.body,password:hashPassword})
+    const newUser=await User.create({...req.body,password:hashPassword,avatar:DEFAULT_AVATAR})
 
     res.status(201).json({
         email:newUser.email,
