@@ -12,7 +12,6 @@ const userSchema = new Schema({
     avatar: {
         type: String,
         default:DEFAULT_AVATAR,
-        required: true,
     },
     gender: {
         type: String,
