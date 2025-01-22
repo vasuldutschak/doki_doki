@@ -7,10 +7,11 @@ const PASSWORD_MIN_LENGTH = 6
 const PASSWORD_MAX_LENGTH = 10
 const USER_ROLES = ["ADMIN", "USER"]
 const GENDER = ["Male", "Female", "Other"]
-
+const {DEFAULT_AVATAR}=process.env
 const userSchema = new Schema({
     avatar: {
         type: String,
+        default:DEFAULT_AVATAR,
         required: true,
     },
     gender: {
