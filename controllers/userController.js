@@ -66,10 +66,10 @@ const createUserAccount=async (req,res,next) => {
     const newUser=await User.create({...req.body,password:hashPassword,avatar:DEFAULT_AVATAR})
 
     res.status(201).json({
+        _id:newUser._id,
         email:newUser.email,
         name:newUser.name,
-        surname: newUser,
-        password: newUser,
+        surname: newUser.surname,
         isVerified: newUser.isVerified,
         hourlyRate: newUser.hourlyRate,
         gender: newUser.gender,
