@@ -68,6 +68,13 @@ const createUserAccount=async (req,res,next) => {
     res.status(201).json({
         email:newUser.email,
         name:newUser.name,
+        surname: newUser,
+        password: newUser,
+        isVerified: newUser.isVerified,
+        hourlyRate: newUser.hourlyRate,
+        gender: newUser.gender,
+        avatar: newUser.avatar,
+        userRole:newUser.userRole
     })
 }
 
