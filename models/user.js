@@ -116,7 +116,12 @@ const verifySchema = Joi.object({
 const updateSchema = Joi.object({
     name: Joi.string().trim(),
     surname: Joi.string().trim(),
-    email: Joi.string().pattern(EMAIL_REGEX)
+    email: Joi.string().pattern(EMAIL_REGEX),
+    gender: Joi.string().valid(...GENDER).required(),
+    avatar: Joi.string().required(),
+    hourlyRate: Joi.number().required(),
+    isVerified: Joi.boolean().required(),
+    userRole: Joi.string().valid(...USER_ROLES).required(),
 })
 
 const createSchema = Joi.object({
