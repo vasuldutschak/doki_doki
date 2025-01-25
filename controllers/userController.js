@@ -85,7 +85,7 @@ const getUserById=async (req,res,next) => {
         throw HttpError(403, `Access denied. You do not have permission to access user with id ${id}`);
     }
 
-    const user=await User.findById(id,"-password -isVerified -verificationCode -createdAt -updatedAt")
+    const user=await User.findById(id,"-password -verificationCode -createdAt -updatedAt")
 
     if(!user){
         throw HttpError(403,`User with id ${id} not found`);
