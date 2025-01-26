@@ -11,7 +11,7 @@ const {
 const mongoose = require('mongoose')
 
 const getAllSchedules = async (req, res) => {
-    const schedules = await Schedule.find({}).populate("schedules.user", "hourlyRate name surname");
+    const schedules = await Schedule.find({}).populate("schedules.user", "hourlyRate name surname avatar");
 
     // Якщо немає розкладів, повертаємо відповідь з повідомленням
     if (schedules.length === 0) {
