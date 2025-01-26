@@ -21,6 +21,56 @@ const getAllSchedules = async (req, res) => {
     // Якщо розклади знайдені, повертаємо їх
     res.status(200).json(schedules);
 }
+const getAllSchedules_ = async (req, res) => {
+    try {
+        // Отримуємо всі розклади з бази даних
+        const schedules = await Schedule.find({}).populate(
+            "schedules.user",
+            "hourlyRate name surname"
+        );
+
+        // Якщо немає розкладів, повертаємо повідомлення
+        if (schedules.length === 0) {
+            return res.status(404).json({ message: "No schedules found" });
+        }
+
+        // Групуємо розклади за тижнями
+        const weeks = schedules.reduce((acc, schedule) => {
+            // Знаходимо початок і кінець тижня
+            const scheduleDate = new Date(schedule.date); // Перетворюємо на дату
+            const startOfWeek = new Date(scheduleDate);
+            startOfWeek.setDate(scheduleDate.getDate() - scheduleDate.getDay()); // Початок тижня (неділя)
+            startOfWeek.setHours(0, 0, 0, 0); // Скидаємо час
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6); // Кінець тижня (субота)
+            endOfWeek.setHours(23, 59, 59, 999); // Останній момент суботи
+
+            // Створюємо ключ для групування
+            const weekKey = `${startOfWeek.toISOString()}_${endOfWeek.toISOString()}`;
+
+            // Якщо такого тижня ще немає, додаємо його
+            if (!acc[weekKey]) {
+                acc[weekKey] = {
+                    dateFrom: startOfWeek,
+                    dateTo: endOfWeek,
+                };
+            }
+
+            return acc;
+        }, {});
+
+        // Перетворюємо об'єкт груп у масив
+        const result = Object.values(weeks);
+
+        // Повертаємо результат
+        res.status(200).json(result);
+    } catch (error) {
+        // Обробка помилок
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 
 const createSchedule = async (req, res, next) => {
     const {date, surchargePerHour, dayType} = req.body;
@@ -68,9 +118,15 @@ const createSchedule = async (req, res, next) => {
 
         // Завершуємо сесію
         session.endSession();
+        const populatedSchedule = await Schedule.findById(schedule[0]._id)
+            .populate({
+                path: "schedules.user",
+                select: "_id avatar name surname", // Тільки потрібні поля
+            })
+            .exec();
 
         // Відправляємо відповідь
-        res.status(201).json(schedule);
+        res.status(201).json(populatedSchedule);
 
     } catch (error) {
         // Якщо помилка - скасовуємо транзакцію
@@ -292,5 +348,6 @@ module.exports = {
     findBetweenDates: ctrlWrapper(findBetweenDates),
     getUserByScheduleIdAndUserId: ctrlWrapper(getUserByScheduleIdAndUserId),
     updateUserByScheduleIdAndUserId: ctrlWrapper(updateUserByScheduleIdAndUserId),
-    updateScheduleById: ctrlWrapper(updateScheduleById)
+    updateScheduleById: ctrlWrapper(updateScheduleById),
+    getAllSchedules_:ctrlWrapper(getAllSchedules_)
 }
