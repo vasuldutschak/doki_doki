@@ -64,9 +64,10 @@ const login = async (req,res,next) => {
 
 
 const logout=async (req,res,next)=>{
+    const {user,token}=req
     try {
         // Видаляємо токен із масиву tokens
-        await User.findByIdAndUpdate(_id, { $pull: { tokens: token } });
+        await User.findByIdAndUpdate(user._id, { $pull: { tokens: token } });
 
         res.json({ message: 'Logged Out Success' });
     } catch (error) {
