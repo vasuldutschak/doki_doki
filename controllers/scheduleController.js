@@ -139,6 +139,53 @@ const createSchedule = async (req, res, next) => {
     }
 };
 
+const createSchedule_v_2=async (req,res)=>{
+    const {date, surchargePerHour, dayType,schedules} = req.body;
+    const dayName = DAY_NAMES[new Date(date).getDay()];
+    const session = await mongoose.startSession();
+    try{
+        session.startTransaction();
+        const schedule = await Schedule.create([{
+            dayName,
+            date,
+            surchargePerHour,
+            dayType,
+            schedules
+        }], {session});
+        const usersId = schedule.schedules.map((item) => {return item._id})
+        await Promise.all(
+            usersId.map((user) =>
+                User.updateOne(
+                    {_id: user},
+                    {$push: {schedules: schedule[0]._id}},
+                    {session}
+                )
+            )
+        );
+
+        // Фіксуємо транзакцію
+        await session.commitTransaction();
+
+        // Завершуємо сесію
+        session.endSession();
+        const populatedSchedule = await Schedule.findById(schedule[0]._id)
+            .populate({
+                path: "schedules.user",
+                select: "_id avatar name surname", // Тільки потрібні поля
+            })
+            .exec();
+
+        // Відправляємо відповідь
+        res.status(201).json(populatedSchedule);
+    }catch(error){
+        await session.abortTransaction();
+        session.endSession(); // Завершуємо сесію
+
+        // Відправляємо помилку
+        console.error("Error in transaction:", error);
+        throw HttpError(500, error.message);
+    }
+}
 const updateSchedule = async (req, res) => {
 
 }
@@ -349,5 +396,6 @@ module.exports = {
     getUserByScheduleIdAndUserId: ctrlWrapper(getUserByScheduleIdAndUserId),
     updateUserByScheduleIdAndUserId: ctrlWrapper(updateUserByScheduleIdAndUserId),
     updateScheduleById: ctrlWrapper(updateScheduleById),
-    getAllSchedules_:ctrlWrapper(getAllSchedules_)
+    getAllSchedules_:ctrlWrapper(getAllSchedules_),
+    createSchedule_v_2:ctrlWrapper(createSchedule_v_2)
 }

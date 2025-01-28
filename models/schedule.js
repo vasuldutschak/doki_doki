@@ -58,6 +58,16 @@ const createSchema=Joi.object({
     date: Joi.date().required(),
     dayType: Joi.string().valid(...WORKING_DAY_TYPES.getDayTypes()).required(),
     surchargePerHour: Joi.number().required(),
+    schedules: Joi.array().items(Joi.object({
+        user:Joi.string().pattern(OBJECT_ID_PATTERN).required(),
+        isWorking: Joi.boolean().required(),
+        personalSurchargePerHour: Joi.number().required(),
+        workStartTime: Joi.string().pattern(TIME_PATTERN).required(),
+        workEndTime: Joi.string().pattern(TIME_PATTERN).required(),
+        hourlyRate: Joi.number().required(),
+        totalMinutes: Joi.number(),
+        totalEarnings: Joi.number(),
+    }))
 })
 
 const findByDateSchema=Joi.object({

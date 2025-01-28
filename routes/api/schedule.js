@@ -1,6 +1,6 @@
 const {validateBody,authenticateWithUserRole, isValidId, validateParams} = require("../../middlewares");
 const {schemas} = require("../../models/schedule");
-const {createSchedule,
+const {createSchedule_v_2,
     findScheduleById,
     findScheduleByDate,
     getAllSchedules,
@@ -11,7 +11,7 @@ const {createSchedule,
 
 const router=require('express').Router();
 
-router.post("/", authenticateWithUserRole(["ADMIN"]),validateBody(schemas.createSchema),createSchedule)
+router.post("/", authenticateWithUserRole(["ADMIN"]),validateBody(schemas.createSchema),createSchedule_v_2)
 
 router.get("/",authenticateWithUserRole(),getAllSchedules)
 
