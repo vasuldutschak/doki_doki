@@ -15,7 +15,7 @@ const authenticateWithUserRole = (roles=["USER","ADMIN"])=>async (req, res, next
         const {id}=jwt.verify(token, SECRET_KEY);
         const user=await User.findById(id).select('-password -createdAt -updatedAt -isVerified').lean();
         //const user=await User.findById(id)
-        if(!user || !user.token || user.token !== token){
+        if(!user || !user.tokens || !user.tokens.includes(token)){
             next( HttpError(401,`Authentication failed`));
         }
 

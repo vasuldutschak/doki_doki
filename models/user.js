@@ -42,10 +42,10 @@ const userSchema = new Schema({
         required: true,
         min: PASSWORD_MIN_LENGTH,
     },
-    token: {
+    tokens: [{
         type: String,
         default: ""
-    },
+    }],
     isVerified: {
         type: Boolean,
     },

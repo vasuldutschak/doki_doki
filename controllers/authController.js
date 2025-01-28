@@ -56,7 +56,7 @@ const login = async (req,res,next) => {
 
     const token=jwt.sign({id:user._id},SECRET_KEY,{expiresIn:'23h'})
 
-    await User.findByIdAndUpdate(user._id,{token})
+    await User.findByIdAndUpdate(user._id, { $push: { tokens: token } });
 
     res.json({token})
 
@@ -64,9 +64,14 @@ const login = async (req,res,next) => {
 
 
 const logout=async (req,res,next)=>{
-    const {_id}=req.user
-    await User.findByIdAndUpdate(_id,{token:""})
-    res.json({message:'Logged Out Success'})
+    try {
+        // Видаляємо токен із масиву tokens
+        await User.findByIdAndUpdate(_id, { $pull: { tokens: token } });
+
+        res.json({ message: 'Logged Out Success' });
+    } catch (error) {
+        next(HttpError(500, "Failed to log out. Please try again later."));
+    }
 }
 
 const getCurrent=async (req,res,next)=>{
