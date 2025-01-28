@@ -139,53 +139,92 @@ const createSchedule = async (req, res, next) => {
     }
 };
 
-const createSchedule_v_2=async (req,res)=>{
-    const {date, surchargePerHour, dayType,schedules} = req.body;
+const createSchedule_v_2 = async (req, res) => {
+    const { date, surchargePerHour, dayType, schedules } = req.body;
     const dayName = DAY_NAMES[new Date(date).getDay()];
     const session = await mongoose.startSession();
-    try{
+
+    try {
         session.startTransaction();
-        const schedule = await Schedule.create([{
-            dayName,
-            date,
-            surchargePerHour,
-            dayType,
-            schedules
-        }], {session});
-        const usersId = schedule.schedules.map((item) => {return item._id})
+
+        // Обчислення totalMinutes та totalEarnings для кожного запису в schedules
+        const updatedSchedules = schedules.map((item) => {
+            if (item.isWorking) {
+                const start = item.workStartTime.split(':');
+                const end = item.workEndTime.split(':');
+
+                // Розрахунок хвилин
+                const startMinutes = parseInt(start[0], 10) * 60 + parseInt(start[1], 10);
+                const endMinutes = parseInt(end[0], 10) * 60 + parseInt(end[1], 10);
+                const totalMinutes = endMinutes - startMinutes;
+
+                // Розрахунок заробітку
+                const totalEarnings = (totalMinutes / 60) * item.hourlyRate;
+
+                return {
+                    ...item,
+                    totalMinutes: Math.max(totalMinutes, 0), // Уникаємо від'ємного часу
+                    totalEarnings: Math.max(totalEarnings, 0), // Уникаємо від'ємного заробітку
+                };
+            }
+
+            // Якщо isWorking = false, залишаємо початкові значення
+            return {
+                ...item,
+                totalMinutes: 0,
+                totalEarnings: 0,
+            };
+        });
+
+        // Створення розкладу
+        const [schedule] = await Schedule.create(
+            [
+                {
+                    dayName,
+                    date,
+                    surchargePerHour,
+                    dayType,
+                    schedules: updatedSchedules,
+                },
+            ],
+            { session }
+        );
+
+        // Попереднє завантаження користувачів у schedules
+        const populatedScheduleWithUsers = await Schedule.findById(schedule._id)
+            .populate("schedules.user", "name surname avatar email") // Завантажуємо дані користувачів
+            .session(session);
+
+        // Оновлення користувачів, додаємо schedule._id
+        const usersId = populatedScheduleWithUsers.schedules.map((item) => item.user._id);
         await Promise.all(
-            usersId.map((user) =>
+            usersId.map((userId) =>
                 User.updateOne(
-                    {_id: user},
-                    {$push: {schedules: schedule[0]._id}},
-                    {session}
+                    { _id: userId },
+                    { $push: { schedules: schedule._id } },
+                    { session }
                 )
             )
         );
 
-        // Фіксуємо транзакцію
+        // Завершення транзакції
         await session.commitTransaction();
-
-        // Завершуємо сесію
         session.endSession();
-        const populatedSchedule = await Schedule.findById(schedule[0]._id)
-            .populate({
-                path: "schedules.user",
-                select: "_id avatar name surname", // Тільки потрібні поля
-            })
-            .exec();
 
-        // Відправляємо відповідь
-        res.status(201).json(populatedSchedule);
-    }catch(error){
+        // Повертаємо результат
+        res.status(201).json(populatedScheduleWithUsers);
+    } catch (error) {
+        // Відкат транзакції у разі помилки
         await session.abortTransaction();
-        session.endSession(); // Завершуємо сесію
+        session.endSession();
 
         // Відправляємо помилку
         console.error("Error in transaction:", error);
-        throw HttpError(500, error.message);
+        res.status(500).json({ message: error.message });
     }
-}
+};
+
+
 const updateSchedule = async (req, res) => {
 
 }
