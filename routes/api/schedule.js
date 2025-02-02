@@ -7,7 +7,8 @@ const {createSchedule_v_2,
     findBetweenDates,
     getUserByScheduleIdAndUserId,
     updateUserByScheduleIdAndUserId,
-    updateScheduleById }=require("../../controllers/scheduleController");
+    updateScheduleById,
+    removeUserFromSchedule}=require("../../controllers/scheduleController");
 
 const router=require('express').Router();
 
@@ -26,5 +27,7 @@ router.get("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),
 router.put("/find/user/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),validateParams(schemas.getUpdateByIdSchemas),updateUserByScheduleIdAndUserId)
 
 router.put("/find/schedule/:scheduleId",authenticateWithUserRole(["ADMIN"]),updateScheduleById)
+
+router.delete("/:scheduleId/:userId",authenticateWithUserRole(["ADMIN"]),removeUserFromSchedule)
 
 module.exports=router;

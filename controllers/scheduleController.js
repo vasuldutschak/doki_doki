@@ -31,7 +31,7 @@ const getAllSchedules_ = async (req, res) => {
 
         // Якщо немає розкладів, повертаємо повідомлення
         if (schedules.length === 0) {
-            return res.status(404).json({ message: "No schedules found" });
+            return res.status(404).json({message: "No schedules found"});
         }
 
         // Групуємо розклади за тижнями
@@ -67,7 +67,7 @@ const getAllSchedules_ = async (req, res) => {
         res.status(200).json(result);
     } catch (error) {
         // Обробка помилок
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({message: "Server error", error: error.message});
     }
 };
 
@@ -140,7 +140,7 @@ const createSchedule = async (req, res, next) => {
 };
 
 const createSchedule_v_2 = async (req, res) => {
-    const { date, surchargePerHour, dayType, schedules } = req.body;
+    const {date, surchargePerHour, dayType, schedules} = req.body;
     const dayName = DAY_NAMES[new Date(date).getDay()];
     const session = await mongoose.startSession();
 
@@ -187,7 +187,7 @@ const createSchedule_v_2 = async (req, res) => {
                     schedules: updatedSchedules,
                 },
             ],
-            { session }
+            {session}
         );
 
         // Попереднє завантаження користувачів у schedules
@@ -200,9 +200,9 @@ const createSchedule_v_2 = async (req, res) => {
         await Promise.all(
             usersId.map((userId) =>
                 User.updateOne(
-                    { _id: userId },
-                    { $push: { schedules: schedule._id } },
-                    { session }
+                    {_id: userId},
+                    {$push: {schedules: schedule._id}},
+                    {session}
                 )
             )
         );
@@ -220,7 +220,7 @@ const createSchedule_v_2 = async (req, res) => {
 
         // Відправляємо помилку
         console.error("Error in transaction:", error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({message: error.message});
     }
 };
 
@@ -424,6 +424,50 @@ const updateScheduleById = async (req, res) => {
     }
 }
 
+const removeUserFromSchedule = async (req, res, next) => {
+    const { scheduleId, userId } = req.params;
+    const session = await mongoose.startSession();
+    try {
+        // Початок транзакції
+        session.startTransaction();
+
+        // Видалення користувача з розкладу
+        const schedule = await Schedule.findOneAndUpdate(
+            { _id: scheduleId, "schedules.user": userId },
+            { $pull: { schedules: { user: userId } } },
+            { new: true }
+        ).session(session);
+
+        if (!schedule) {
+            return next(HttpError(404, 'Schedule not found'));
+        }
+
+        // Видалення розкладу у користувача
+        const user = await User.findOneAndUpdate(
+            { _id: userId },
+            { $pull: { schedules: { scheduleId } } },
+            { new: true }
+        ).session(session);
+
+        if (!user) {
+            return next(HttpError(404, 'User not found'));
+        }
+
+
+        await session.commitTransaction();
+
+
+        res.status(200).json({ message: 'User removed from schedule', user });
+
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(error.statusCode || 500).json({ message: error.message });
+    } finally {
+        session.endSession();
+    }
+};
+
+
 module.exports = {
     getAllSchedules: ctrlWrapper(getAllSchedules),
     createSchedule: ctrlWrapper(createSchedule),
@@ -435,6 +479,7 @@ module.exports = {
     getUserByScheduleIdAndUserId: ctrlWrapper(getUserByScheduleIdAndUserId),
     updateUserByScheduleIdAndUserId: ctrlWrapper(updateUserByScheduleIdAndUserId),
     updateScheduleById: ctrlWrapper(updateScheduleById),
-    getAllSchedules_:ctrlWrapper(getAllSchedules_),
-    createSchedule_v_2:ctrlWrapper(createSchedule_v_2)
+    getAllSchedules_: ctrlWrapper(getAllSchedules_),
+    createSchedule_v_2: ctrlWrapper(createSchedule_v_2),
+    removeUserFromSchedule: ctrlWrapper(removeUserFromSchedule)
 }
