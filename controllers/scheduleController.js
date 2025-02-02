@@ -457,7 +457,7 @@ const removeUserFromSchedule = async (req, res, next) => {
         await session.commitTransaction();
 
 
-        res.status(200).json({ message: 'User removed from schedule', user });
+        res.status(200).json({ message: 'User removed from schedule', user,schedule });
 
     } catch (error) {
         await session.abortTransaction();
