@@ -20,7 +20,7 @@ const authenticateWithUserRole = (roles = ["USER", "ADMIN"]) => async (req, res,
         }
 
         if (!roles.includes(user.userRole)) {
-            next(HttpError(403))
+            next(HttpError(403,'User has hot permission'))
         }
         req.user = user;
         req.token = token;
