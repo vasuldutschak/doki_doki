@@ -77,7 +77,7 @@ const createSchedule = async (req, res, next) => {
     const dayName = DAY_NAMES[new Date(date).getDay()];
     const session = await mongoose.startSession(); // Створюємо сесію
     try {
-        session.startTransaction();
+        await session.startTransaction();
         // Отримуємо всіх користувачів
         const users = await User.find({}, '-isVerified -password ', {session});
 
@@ -145,7 +145,7 @@ const createSchedule_v_2 = async (req, res) => {
     const session = await mongoose.startSession();
 
     try {
-        session.startTransaction();
+       await session.startTransaction();
 
         // Обчислення totalMinutes та totalEarnings для кожного запису в schedules
         const updatedSchedules = schedules.map((item) => {
@@ -306,10 +306,9 @@ const updateUserByScheduleIdAndUserId = async (req, res) => {
     const {isWorking, workStartTime = "00:00", workEndTime = "00:00", personalSurchargePerHour = 0} = req.body;
 
     const session = await mongoose.startSession(); // Створюємо сесію
-    session.startTransaction();
 
     try {
-        // Знайдемо користувача
+        await session.startTransaction();
         const user = await User.findById(userId).session(session);
         if (!user) {
             throw HttpError(404, `User with id ${userId} does not exist`);
@@ -389,7 +388,7 @@ const updateScheduleById = async (req, res) => {
 
     try {
 
-        session.startTransaction();
+        await session.startTransaction();
         const schedule = await Schedule.findById(scheduleId).session(session);
 
         if (!schedule) {
@@ -429,7 +428,7 @@ const removeUserFromSchedule = async (req, res, next) => {
     const session = await mongoose.startSession();
     try {
         // Початок транзакції
-        session.startTransaction();
+        await session.startTransaction();
 
         // Видалення користувача з розкладу
         const schedule = await Schedule.findOneAndUpdate(
@@ -467,6 +466,32 @@ const removeUserFromSchedule = async (req, res, next) => {
     }
 };
 
+const removeScheduleById=async (req, res, next)=>{
+    const {scheduleId} = req.params;
+    const session = await mongoose.startSession();
+    try{
+        await session.startTransaction();
+        const schedule = await Schedule.findById(scheduleId).session(session);
+        if (!schedule) {
+            next(HttpError(404, 'User not found'));
+        }
+        await Schedule.deleteOne({ _id: scheduleId }).session(session);
+        await User.updateMany(
+            { schedules: scheduleId },
+            { $pull: { schedules: scheduleId } },
+            { multi: true }
+        ).session(session);
+
+        // 3️⃣ Підтвердити транзакцію
+        await session.commitTransaction();
+
+        res.status(200).json({schedule});
+    }catch(error){
+
+    }finally {
+
+    }
+}
 
 module.exports = {
     getAllSchedules: ctrlWrapper(getAllSchedules),
@@ -481,5 +506,6 @@ module.exports = {
     updateScheduleById: ctrlWrapper(updateScheduleById),
     getAllSchedules_: ctrlWrapper(getAllSchedules_),
     createSchedule_v_2: ctrlWrapper(createSchedule_v_2),
-    removeUserFromSchedule: ctrlWrapper(removeUserFromSchedule)
+    removeUserFromSchedule: ctrlWrapper(removeUserFromSchedule),
+    removeScheduleById:ctrlWrapper(removeScheduleById)
 }
