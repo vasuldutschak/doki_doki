@@ -489,7 +489,7 @@ const removeScheduleById=async (req, res, next)=>{
     }catch(error){
 
     }finally {
-
+        session.endSession()
     }
 }
 

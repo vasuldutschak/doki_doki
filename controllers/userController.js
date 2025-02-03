@@ -1,5 +1,7 @@
 const {ctrlWrapper, HttpError, createHash} = require("../helpers");
 const {User}=require('./../models/user')
+const mongoose = require("mongoose");
+const {Schedule} = require("../models/schedule");
 const {DEFAULT_AVATAR}=process.env
 
 const updateVerify = async (req,res,next) => {
@@ -18,14 +20,33 @@ const getAll=async (req,res,next) => {
 }
 
 const removeById=async (req,res,next) => {
+
     const {id} = req.params;
-    const user = await User.findByIdAndDelete(id).select('-password');
 
-    if (!user) {
-        throw HttpError(404, `User with id ${id} not found`);
+    const session = await mongoose.startSession();
+    try{
+        await session.startTransaction();
+
+        const user = await User.findByIdAndDelete(id).select('-password');
+
+        if (!user) {
+            throw HttpError(404);
+        }
+        await Schedule.updateMany(
+            { "schedules.user": id },
+            { $pull: { schedules: { user: id } } },
+            { session }
+        );
+
+        await session.commitTransaction();
+
+        res.status(200).json({ message: "User and related schedules updated", user });
+    }catch(error){
+        await session.abortTransaction();
+        next(error);
+    }finally {
+        session.endSession()
     }
-
-    res.status(200).json({ message: "User deleted successfully", user });
 }
 
 const update=async (req,res,next) => {

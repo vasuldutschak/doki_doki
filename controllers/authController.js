@@ -41,17 +41,17 @@ const login = async (req,res,next) => {
     const user=await User.findOne({email})
 
     if(!user){
-        throw HttpError(401,`Email or password is incorrect`)
+        throw HttpError(401)
     }
 
     const comparePassword=await bcrypt.compare(password, user.password)
 
     if (!comparePassword){
-        throw HttpError(401,`Email or password is incorrect`)
+        throw HttpError(401)
     }
 
     if (!user.isVerified){
-        throw HttpError(401,"User not verified. Please verify your account.")
+        throw HttpError(401)
     }
 
     const token=jwt.sign({id:user._id},SECRET_KEY,{expiresIn:'23h'})
